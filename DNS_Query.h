@@ -9,21 +9,8 @@ Author : Silver Moon (m00n.silv3r@gmail.com)
 Dated : 29/4/2009
 */
 
-<<<<<<< HEAD
 #ifndef DNS_QUERY_H
 #define DNS_QUERY_H
-
-/* Function Prototypes */
-
-void DNS_Query(void*, char*, char*, char*, int); //Performs a DNS query by sending a packet combining msg and hostname
-=======
-/* Function Prototypes */
-
-void ngethostbyname (unsigned char*, unsigned char*, unsigned char*, int); //Performs a DNS query by sending a packet combining msg and hostname
->>>>>>> b314e18594536042d83fb0c0060edfc8f8df9219
-/*
-void get_dns_servers(); //Get the DNS servers from /etc/resolv.conf file on Linux
-*/
 
 //Header Files
 #include <stdio.h> //printf
@@ -34,13 +21,16 @@ void get_dns_servers(); //Get the DNS servers from /etc/resolv.conf file on Linu
 #include <netinet/in.h>
 #include <unistd.h> //getpid
 
-<<<<<<< HEAD
 #include "DNS_Encode.h"
-=======
+
 #include "CyoEncode.h" //encode into Base32
 #include "CyoDecode.h" //decode from Base32
-#include "DNS_Encode.c"
->>>>>>> b314e18594536042d83fb0c0060edfc8f8df9219
+
+void DNS_Query(void*, char*, char*, char*, int); //Performs a DNS query by sending a packet combining msg and hostname
+/*
+void get_dns_servers(); //Get the DNS servers from /etc/resolv.conf file on Linux
+*/
+
 
 //DNS header structure
 struct DNS_HEADER
@@ -94,14 +84,8 @@ struct RES_RECORD
 //Structure of a Query
 typedef struct
 {
-<<<<<<< HEAD
     char *name;
     struct QUESTION *ques;
 } QUERY;
 
 #endif
-=======
-    unsigned char *name;
-    struct QUESTION *ques;
-} QUERY;
->>>>>>> b314e18594536042d83fb0c0060edfc8f8df9219

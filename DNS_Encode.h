@@ -8,7 +8,7 @@
 
 #include "CyoEncode.h" //encode into Base32
 
-char* Encode(char*); 
+char* Encode(char*);
 char* dns_split(char* encoded, size_t required); //Used in Encode
 void ChangetoDnsNameFormat(char*, char*); //This will convert www.google.com to 3www6google3com
 

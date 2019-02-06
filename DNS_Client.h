@@ -3,6 +3,9 @@
  *2. Receiving thread: perform an DNS request permanently in order to get the answers from the DNS server
  */
 
+#ifndef DNS_CLIENT_H
+#define DNS_CLIENT_H
+
 //Header Files
 #include <stdio.h> //printf
 #include <string.h> //strlen
@@ -23,3 +26,5 @@ struct sockfd_ipDNS_host {
 
 void *sending(void *sih_void);
 void *receiving(void *sih_void);
+
+#endif
