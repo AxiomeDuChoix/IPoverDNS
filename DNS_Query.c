@@ -18,77 +18,12 @@ Dated : 29/4/2009
 #include <netinet/in.h>
 #include <unistd.h> //getpid
 
-<<<<<<< HEAD
 #include "DNS_Query.h"
 #include "DNS_Encode.h"
 //#include "DNS_Decode.c"
 
 #define MAX_SZ 32768
-=======
-#include "DNS_Encode.c"
-#include "DNS_Decode.c"
 
-#define T_A 1 //Ipv4 address
-#define T_NS 2 //Nameserver
-#define T_CNAME 5 // canonical name
-#define T_SOA 6 /* start of authority zone */
-#define T_PTR 12 /* domain name pointer */
-#define T_MX 15 //Mail server
-
->>>>>>> b314e18594536042d83fb0c0060edfc8f8df9219
-/*
-//List of DNS Servers registered on the system
-char dns_servers[10][100];
-int dns_server_count = 0;
-//Types of DNS resource records :)
-*/
-<<<<<<< HEAD
-/*
-int main(int argc, char *argv[])
-{
-    char hostname[20];
-    char ip_dns_server[20];
-    char msg[MAX_SZ];
-=======
-
-int main(int argc, char *argv[])
-{
-    unsigned char hostname[100];
-    unsigned char ip_dns_server[100];
-    unsigned char msg[100];
->>>>>>> b314e18594536042d83fb0c0060edfc8f8df9219
-
-    //Get the DNS servers from the resolv.conf file
-    //get_dns_servers();
-     
-<<<<<<< HEAD
-    printf("Enter the msg to send: ");
-    fgets(msg, MAX_SZ, stdin);
-
-    // Remove trailing newline, if there is. 
-    if ((strlen(msg) > 0) && (msg[strlen(msg)-1] == '\n'))
-    {msg[strlen(msg)-1] = '\0';}
-
-    printf("Enter Hostname to Lookup: ");
-    fgets(hostname, MAX_SZ, stdin);
-
-    // Remove trailing newline, if there is.
-    if ((strlen(hostname) > 0) && (hostname[strlen(hostname)-1] == '\n'))
-    {hostname[strlen(hostname)-1] = '\0';}
-
-    printf("Enter the DNS server's IP: ");
-    fgets(ip_dns_server, MAX_SZ, stdin);
-
-    // Remove trailing newline, if there is.
-    if ((strlen(ip_dns_server) > 0) && (ip_dns_server[strlen(ip_dns_server)-1] == '\n'))
-    {ip_dns_server[strlen(ip_dns_server)-1] = '\0';}
-     
-    //Now get the ip of this hostname, A record
-    DNS_Query(msg, hostname, ip_dns_server, T_A);
-
-    return 0;
-}
-*/
 /*
  * Perform a DNS query by sending a packet
  * */
@@ -102,54 +37,17 @@ void DNS_Query(void* sockfd_void, char *msg, char *host, char *ip_dns_server, in
     //struct sockaddr_in a;
 
     //struct RES_RECORD answers[20],auth[20],addit[20]; //the replies from the DNS server
-=======
-    printf("Enter the msg to send:");
-    scanf("%s", msg);
 
-    printf("Enter Hostname to Lookup:");
-    scanf("%s", hostname);
-
-    printf("Enter the DNS server's IP:");
-    scanf("%s", ip_dns_server);
-     
-    //Now get the ip of this hostname, A record
-    ngethostbyname(msg, hostname, ip, T_A);
-
-    return 0;
-}
- 
-/*
- * Perform a DNS query by sending a packet
- * */
-void ngethostbyname(unsigned char *msg, unsigned char *host, unsigned char *ip, int query_type)
-{
-    unsigned char buf[65536], *qname, *reader, *msg_encoded;
-    int i, j, stop, s;
-
-    struct sockaddr_in a;
-
-    struct RES_RECORD answers[20],auth[20],addit[20]; //the replies from the DNS server
->>>>>>> b314e18594536042d83fb0c0060edfc8f8df9219
     struct sockaddr_in dest;
 
     struct DNS_HEADER *dns = NULL;
     struct QUESTION *qinfo = NULL;
 
-<<<<<<< HEAD
     printf("Resolving %s and %s\n", msg, host);
 
     dest.sin_family = AF_INET;
     dest.sin_port = htons(53); //DNS uses the port 53
     dest.sin_addr.s_addr = inet_addr(ip_dns_server);
-=======
-    printf("Resolving %s and %s", msg, host);
-
-    s = socket(AF_INET , SOCK_DGRAM , IPPROTO_UDP); //UDP packet for DNS queries
-
-    dest.sin_family = AF_INET;
-    dest.sin_port = htons(53);
-    dest.sin_addr.s_addr = inet_addr(ip);
->>>>>>> b314e18594536042d83fb0c0060edfc8f8df9219
 
     //Set the DNS structure to standard queries
     dns = (struct DNS_HEADER *) &buf;
@@ -171,7 +69,6 @@ void ngethostbyname(unsigned char *msg, unsigned char *host, unsigned char *ip, 
     dns->add_count = 0;
 
     //Point to the query portion
-<<<<<<< HEAD
     qname = (char*) &buf[sizeof(struct DNS_HEADER)];
 
     //convert msg into 'd'+${msg}+'.'+${hostname}
@@ -181,11 +78,7 @@ void ngethostbyname(unsigned char *msg, unsigned char *host, unsigned char *ip, 
     strcat(msg_encoded, splited);
     msg_encoded[strlen(splited) + 1] = '.';
     strcat(msg_encoded, host);
-=======
-    qname = (unsigned char*) &buf[sizeof(struct DNS_HEADER)];
 
-    msg_encoded = Encode(msg, host);
->>>>>>> b314e18594536042d83fb0c0060edfc8f8df9219
     ChangetoDnsNameFormat(qname, msg_encoded); //e.g. text: www.google.com & qname: 3www6google3com
 
     qinfo = (struct QUESTION*) &buf[sizeof(struct DNS_HEADER) + (strlen((const char*)qname) + 1)]; //fill it
@@ -193,7 +86,6 @@ void ngethostbyname(unsigned char *msg, unsigned char *host, unsigned char *ip, 
     qinfo->qtype = htons(query_type); //type of the query, A, MX, CNAME, NS etc
     qinfo->qclass = htons(1); //its internet (lol)
 
-<<<<<<< HEAD
     printf("\nSending Packet...\n");
     if (sendto(s, (char*)buf, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&dest, sizeof(dest)) < 0)
     {
@@ -209,20 +101,6 @@ void ngethostbyname(unsigned char *msg, unsigned char *host, unsigned char *ip, 
     i = sizeof dest;
     printf("\nReceiving answer...");
     if (recvfrom(s, (char*)buf, 65536, 0, (struct sockaddr*)&dest, (socklen_t*)&i) < 0)
-=======
-    printf("\nSending Packet...");
-    if (sendto(s, (char*)buf, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&dest, sizeof(dest)) < 0)
-    {
-        perror("sendto failed");
-    }
-    free(msg_encoded);
-    printf("Done");
-     
-    //Receive the answer
-    i = sizeof dest;
-    printf("\nReceiving answer...");
-    if (recvfrom (s, (char*)buf, 65536, 0, (struct sockaddr*)&dest, (socklen_t*)&i) < 0)
->>>>>>> b314e18594536042d83fb0c0060edfc8f8df9219
     {
         perror("recvfrom failed");
     }
@@ -361,11 +239,7 @@ void ngethostbyname(unsigned char *msg, unsigned char *host, unsigned char *ip, 
         }
         printf("\n");
     }
-<<<<<<< HEAD
     */
-=======
->>>>>>> b314e18594536042d83fb0c0060edfc8f8df9219
-
     return;
 }
 

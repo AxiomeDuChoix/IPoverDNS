@@ -3,7 +3,6 @@
 #include <string.h> //strlen
 #include <stdlib.h> //malloc
 
-<<<<<<< HEAD
 #include "DNS_Decode.h"
 #include "CyoDecode.h" //encode into Base32
 
@@ -76,91 +75,6 @@ char* dns_unsplit(char* encoded){
 		}
 	}
 	return unsplited;
-=======
-#include "CyoDecode.h" //decode from Base32
-
-char* Decode (unsigned char*);
-char* dns_unsplit (char* encoded, size_t required); //Used in Encode
-unsigned char* ReadName (unsigned char*, unsigned char*, int*); //This will convert 3www6google3com to www.google.com
-
-int main(int argc, char* argv[])
-{
-    printf("Enter the msg to encode:");
-    scanf("%s", msg);
-
-    printf("\n%s", Decode(msg));
-    return 0;
-}
-
-char* Decode (unsigned char* msg)
-{
-	size_t required = 0;
-	char* encoded = NULL;
-	int valid = 0;
-
-	/* Encode using Base32 */
-
-	printf("Original = '%s'\n", msg);
-	required = cyoBase64EncodeGetLength(strlen(msg));
-	encoded = (char*)malloc(required);
-	if (encoded == NULL)
-	{
-	printf("*** ERROR: Unable to allocate buffer for encoding ***\n");
-	goto exit;
-	}
-	cyoBase32Encode(encoded, msg, strlen(msg));
-
-	/* Validate encoding */
-
-	valid = cyoBase32Validate(encoded, strlen(encoded));
-	if (valid < 0)
-	{
-	printf("*** ERROR: Encoding failure (error %d) ***\n", valid);
-	goto exit;
-	} 
-
-	/* Change all "=" to "0" */
-	for (char* p = encoded; p = strchr(p, '='); ++p) {
-	    *p = '0';
-	}
-
-	return dns_split(encoded, required);
-
-	printf("Encoded = '%s'\n", msg_encoded);
-}
-
-/* Split the encoded Base32 message into sections of 63 bits (because in QNAME each word between the dots only has 64 bits)
- * The first word can only have 62 bits ("d" in front and "." behind)
- * The others can have 63 ("." behind)
- */
-
-char* dns_split(char* encoded, size_t required){ 
-	char msg_encoded[required + required/63 + 1];
-	int comp_enc = 0;
-	int comp_msg = 0;
-	int size_pack = 62;
-	int len_encoded = strlen(encoded);
-
-	while (1){
-	for (int j = 0; j < size_pack; j++)
-	{
-		if (comp_enc < len_encoded)
-		{
-			msg_encoded[comp_msg] = encoded[comp_enc];
-			comp_enc++;
-			comp_msg++;
-		}
-		else {return msg_encoded;}
-	}
-	if (comp_enc + 1 < len_encoded)
-	{
-		msg_encoded[comp_msg] = '.';
-		comp_msg++;
-	}
-	else {return msg_encoded;}
-	size_pack = 63;
-	}
->>>>>>> b314e18594536042d83fb0c0060edfc8f8df9219
 }
 
 /*
@@ -175,24 +89,16 @@ Dated : 29/4/2009
 /*
  * This will convert 3www6google3com to www.google.com 
  * */
-<<<<<<< HEAD
+
 char* ReadName(char* reader, char* buffer, int* count)
 {
     char *name;
-=======
-u_char* ReadName(unsigned char* reader, unsigned char* buffer, int* count)
-{
-    unsigned char *name;
->>>>>>> b314e18594536042d83fb0c0060edfc8f8df9219
+
     unsigned int p=0,jumped=0,offset;
     int i , j;
  
     *count = 1;
-<<<<<<< HEAD
     name = (char*)malloc(256);
-=======
-    name = (unsigned char*)malloc(256);
->>>>>>> b314e18594536042d83fb0c0060edfc8f8df9219
  
     name[0]='\0';
  

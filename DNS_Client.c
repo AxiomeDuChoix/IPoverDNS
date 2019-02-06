@@ -46,9 +46,11 @@ int main(int argc, char *argv[])
 
 	//assign name to socket (bind function)
 	struct sockaddr_in address;
+	bzero((char *) &address, sizeof(address));
 	memset(&address.sin_zero, 0, sizeof(address.sin_zero));
 	address.sin_family = AF_INET; //IPv4
 	address.sin_port = htons(80);
+	address.sin_addr.s_addr = htonl(inet_network("10.0.0.1"));
 	
 	const struct sockaddr *addr = (struct sockaddr*) &address;
 	

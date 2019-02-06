@@ -18,14 +18,14 @@ openvpn --mktun --dev tap0
 #bring it up
 ip link set tap0 up
 
-#gives it an ip address
+#give it an ip address
 ip addr add $iptap dev tap0
 
-#gets the default gateway (IP address of the router)
+#get the default gateway (IP address of the router)
 DEFR=$(netstat -rn | grep "^0.0.0.0 " | awk '{print $2}')
 
-#deletes it
-route delete default gw $DEFR
+#delete it
+route del default gw $DEFR
 
 #only if we want to reach the DNS server we pass by the original gateway 
 route add -host $1 gw $DEFR
