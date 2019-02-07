@@ -85,7 +85,9 @@ struct RES_RECORD
 typedef struct
 {
     char *name;
+    struct DNS_header *header;
     struct QUESTION *ques;
+    struct RES_RECORD *record;
 } QUERY;
 
 #endif
