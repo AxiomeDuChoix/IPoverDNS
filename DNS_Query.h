@@ -26,10 +26,11 @@ Dated : 29/4/2009
 #include "CyoEncode.h" //encode into Base32
 #include "CyoDecode.h" //decode from Base32
 
-void DNS_Query(void*, char*, char*, char*, int); //Performs a DNS query by sending a packet combining msg and hostname
-/*
-void get_dns_servers(); //Get the DNS servers from /etc/resolv.conf file on Linux
-*/
+/* Perform a DNS query by sending a packet combining msg and hostname, and return the length of qname */
+int DNS_Query(int, void*, char*, char*, char*, int, int);
+
+//void get_dns_servers(); //Get the DNS servers from /etc/resolv.conf file on Linux
+
 
 
 //DNS header structure

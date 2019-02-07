@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 char* Encode (char* msg)
 {
 	size_t required = 0;
-	char* encoded, *splited;
+	char *encoded = NULL, *splited = NULL;
 
 	/* Encode using Base32 */
 
@@ -44,7 +44,6 @@ char* Encode (char* msg)
 	    *p = '0';
 	}
 
-	splited = (char*) malloc(required + required/63 + 1);
 	splited = dns_split(encoded, required);
 
     free(encoded);
@@ -58,7 +57,8 @@ char* Encode (char* msg)
  */
 
 char* dns_split(char* encoded, size_t required){ 
-	char* msg_encoded = (char*) malloc(required + required/63 + 1);
+	char* msg_encoded = NULL;
+	msg_encoded = (char*) malloc(required + required/63 + 1);
 	int comp_enc = 0;
 	int comp_msg = 0;
 	int size_pack = 62;

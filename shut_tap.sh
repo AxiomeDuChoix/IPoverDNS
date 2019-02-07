@@ -12,7 +12,10 @@ fi
 
 iptap=10.0.0.1
 
-route del default gw $iptap
+ip link set tap0 down
+
+#destroy tap0
+openvpn --rmtun --dev tap0
 
 #get the origianl gateway
 DEFR=$(netstat -rn | grep "^$1 " | awk '{print $2}')
@@ -20,3 +23,8 @@ DEFR=$(netstat -rn | grep "^$1 " | awk '{print $2}')
 route del $1
 
 route add default gw $DEFR
+
+route add 129.104.32.251 gw $DEFR
+
+#show the IP routing table
+netstat -rn
