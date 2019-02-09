@@ -9,6 +9,9 @@ Author : Silver Moon (m00n.silv3r@gmail.com)
 Dated : 29/4/2009
 */
 
+#ifndef DNS_LISTEN_H
+#define DNS_LISTEN_H
+
 //Header Files
 #include <stdio.h> //printf
 #include <string.h> //strlen
@@ -18,9 +21,12 @@ Dated : 29/4/2009
 #include <netinet/in.h>
 #include <unistd.h> //getpid
 
-#include "Query.h"
+#include "DNS_Query.h"
 #include "DNS_Decode.h"
+#include "New_from_Binary.h"
 
 #define MAX_SZ 32768
 
-void Listen(void* sockfd_void, int len_qname, char *ip_dns_server);
+char* Listen(void* sockfd_void, int len_qname, char *ip_dns_server);
+
+#endif

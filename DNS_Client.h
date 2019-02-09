@@ -25,6 +25,7 @@
 #include <fcntl.h>
 
 #include "DNS_Query.h"
+#include "DNS_Listen.h"
 
 struct sockfd_ipDNS_host {
 	int tapfd;

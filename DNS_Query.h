@@ -22,12 +22,10 @@ Dated : 29/4/2009
 #include <unistd.h> //getpid
 
 #include "DNS_Encode.h"
-
-#include "CyoEncode.h" //encode into Base32
-#include "CyoDecode.h" //decode from Base32
+#include "Binary_from_New.h"
 
 /* Perform a DNS query by sending a packet combining msg and hostname, and return the length of qname */
-int DNS_Query(int, void*, char*, char*, char*, int, int);
+int DNS_Query(int, void*, char*, char*, char*, int);
 
 //void get_dns_servers(); //Get the DNS servers from /etc/resolv.conf file on Linux
 
@@ -77,16 +75,18 @@ struct R_DATA
 //Pointers to resource record contents
 struct RES_RECORD
 {
-    unsigned char *name;
+    char *name;
     struct R_DATA *resource;
-    unsigned char *rdata;
+    char *rdata;
 };
  
-//Structure of a Query
-typedef struct
+//Structure of a Packet
+struct DNS_PACKET
 {
-    char *name;
-    struct QUESTION *ques;
-} QUERY;
+    struct DNS_HEADER *header;
+    char* qname;
+    struct QUESTION *question;
+    struct RES_RECORD *record;
+};
 
 #endif

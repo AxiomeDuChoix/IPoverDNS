@@ -23,6 +23,7 @@
 
 #include "DNS_Client.h"
 #include "DNS_Query.h"
+#include "DNS_Listen.h"
 
 #define T_A 1 //Ipv4 address
 #define T_NS 2 //Nameserver
@@ -33,8 +34,8 @@
 
 #define MAX_SZ 32768
 
-pthread_mutex_t lock;
-int num_req = 0;
+pthread_mutex_t sendmutex;
+pthread_mutex_t receivemutex;
 
 int main(int argc, char *argv[])
 {
@@ -51,7 +52,7 @@ int main(int argc, char *argv[])
 
   	/* initialize tun/tap interface */
   	strncpy(if_name, "tap0", MAX_SZ-1);
-  	if ((tap_fd = tun_alloc(if_name, IFF_TAP | IFF_NO_PI)) < 0) {
+  	if ((tap_fd = tun_alloc(if_name, IFF_TAP)) < 0) {
     	printf("Error connecting to interface %s.\n", if_name);
     	return (EXIT_FAILURE);
   	}
@@ -64,23 +65,6 @@ int main(int argc, char *argv[])
 		return (EXIT_FAILURE);
 	}
 	printf("Socket created.\n");
-
-	/*
-	//assign name to socket (bind function)
-	struct sockaddr_in address;
-	bzero((char *) &address, sizeof(address));
-	memset(&address.sin_zero, 0, sizeof(address.sin_zero));
-	address.sin_family = AF_INET; //IPv4
-	address.sin_port = htons(443);
-	address.sin_addr.s_addr = htonl(inet_network("10.0.0.1"));
-	
-	const struct sockaddr *addr = (struct sockaddr*) &address;
-	
-	if (bind(sockfd, addr, sizeof(*addr))) {
-		perror("bind");
-		exit(EXIT_FAILURE);
-	}
-	*/
 
 	//arguments of functions "sending" & "receiving"
 	struct sockfd_ipDNS_host sih_init;
@@ -97,31 +81,33 @@ int main(int argc, char *argv[])
 	pthread_t sending_thread;
 	pthread_t receiving_thread;
 
-	if (pthread_mutex_init(&lock, NULL) != 0)
+	if (pthread_mutex_init(&sendmutex, NULL) != 0)
     {
         printf("\n mutex init failed\n");
         return (EXIT_FAILURE);
     }
+    if (pthread_mutex_init(&receivemutex, NULL) != 0)
+    {
+        printf("\n mutex init failed\n");
+        return (EXIT_FAILURE);
+    }
+	
+	if (pthread_create(&sending_thread, NULL, &sending, (void*) sih)) {
+		fprintf(stderr, "Error creating sending thread.\n");
+		return (EXIT_FAILURE);
+	}
+	if (pthread_create(&receiving_thread, NULL, &receiving, (void*) sih)) {
+		fprintf(stderr, "Error creating receiving thread.\n");
+		return (EXIT_FAILURE);
+	}
 
-	while (1) {
-		if (pthread_create(&sending_thread, NULL, &sending, (void*) sih)) {
-			fprintf(stderr, "Error creating sending thread.\n");
-			return (EXIT_FAILURE);
-		}
-		if (pthread_create(&receiving_thread, NULL, &receiving, (void*) sih)) {
-			fprintf(stderr, "Error creating receiving thread.\n");
-			return (EXIT_FAILURE);
-		}
-		/*
-		if (pthread_join(sending_thread, NULL)) {
-			fprintf(stderr, "Error joining sending thread.\n");
-			return (EXIT_FAILURE);
-		}
-		*/
-		if (pthread_join(receiving_thread, NULL)) {
-			fprintf(stderr, "Error joining receiving thread.\n");
-			return (EXIT_FAILURE);
-		}
+	if (pthread_join(sending_thread, NULL)) {
+		fprintf(stderr, "Error joining sending thread.\n");
+		return (EXIT_FAILURE);
+	}
+	if (pthread_join(receiving_thread, NULL)) {
+		fprintf(stderr, "Error joining receiving thread.\n");
+		return (EXIT_FAILURE);
 	}
 	
 	pthread_exit(NULL);
@@ -141,7 +127,7 @@ int main(int argc, char *argv[])
 
 void *sending(void *sih_void)
 {
-	pthread_mutex_lock(&lock);
+	pthread_mutex_lock(&sendmutex);
 
 	struct sockfd_ipDNS_host *sih = NULL;
 	sih = (struct sockfd_ipDNS_host*) sih_void;
@@ -159,42 +145,25 @@ void *sending(void *sih_void)
     uint16_t nread, nwrite, plength;
 
 	/* listen from tap0 */
-	char msg[MAX_SZ];
-	memset(msg, 0, MAX_SZ);
-
-	if(FD_ISSET(tap_fd, &rd_set))
+	while (1)
 	{
-      nread = cread(tap_fd, msg, MAX_SZ);
-      printf("Message to encode: '%s' (%d bytes)\n", msg, nread);
+		char msg[MAX_SZ];
+		memset(msg, 0, MAX_SZ);
+      	nread = read_n(tap_fd, msg, MAX_SZ);
+      	printf("Message to encode: '%s' (%d bytes)\n", msg, nread);
+      	void* sockfd_void = NULL;
+		sockfd_void = &sockfd;
+		/* transform the msg into a DNS request and send it to the DNS server */
+		DNS_Query(1, sockfd_void, msg, host, ip_dns_server, T_A);
     }
-
-	/*
-	int nb_bytes_recved;
-	struct sockaddr from;
-	socklen_t fromlen = sizeof(from);
 	
-	printf("Listening from tap0...\n");
-	nb_bytes_recved = recvfrom(sockfd, msg, MAX_SZ, 0, &from, &fromlen);
-
-	char* pointer = msg;
-	pointer += nb_bytes_recved - 1;
-	*pointer = '\0';
-	*/
-
-	/* transform the msg into a DNS request and send it to the DNS server */
-	void* sockfd_void = NULL;
-	sockfd_void = &sockfd;
-	
-	DNS_Query(1, sockfd_void, msg, host, ip_dns_server, T_A, 0);
-	
-	pthread_mutex_unlock(&lock);
+	pthread_mutex_unlock(&sendmutex);
 }
 
+/* ask if the DNS server has a packet to send back */
 void *receiving(void *sih_void)
 {
-	pthread_mutex_lock(&lock);
-
-	num_req += 1
+	pthread_mutex_lock(&receivemutex);
 
 	struct sockfd_ipDNS_host *sih = NULL;
 	sih = (struct sockfd_ipDNS_host*) sih_void;
@@ -205,17 +174,23 @@ void *receiving(void *sih_void)
 	char* host = NULL;
 	host = sih->host;
 
-	/* ask if the DNS server has a packet to send back */
 	void* sockfd_void = NULL;
 	sockfd_void = &sockfd;
 
-	/* see DNS_Query.c */
-	int len = DNS_Query(0, sockfd_void, atoi(num_req), host, ip_dns_server, T_A, num_req);
+	while (1)
+	{
+		/* see DNS_Query.c */
+		int len = DNS_Query(0, sockfd_void, "0", host, ip_dns_server, T_A);
 	
-	/* see DNS_Listen.c */
-	Listen(sockfd_void, len, ip_dns_server);
-	pthread_mutex_unlock(&lock);
-	sleep(3);
+		/* see DNS_Listen.c */
+		char *received = Listen(sockfd_void, len, ip_dns_server);
+		cwrite(tapfd, received, strlen(received));
+		free(received);
+
+		sleep(3);
+	}
+
+	pthread_mutex_unlock(&receivemutex);
 }
 
 
@@ -297,7 +272,8 @@ int read_n(int fd, char *buf, int n){
   while(left > 0) {
     if ((nread = cread(fd, buf, left))==0){
       return 0 ;      
-    }else {
+    }
+    else {
       left -= nread;
       buf += nread;
     }

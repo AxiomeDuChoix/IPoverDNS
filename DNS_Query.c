@@ -20,67 +20,64 @@ Dated : 29/4/2009
 
 #include "DNS_Query.h"
 #include "DNS_Encode.h"
+#include "Binary_from_New.h"
 
 #define MAX_SZ 32768
 
 /*
  * Perform a DNS query by sending a packet combining msg and hostname, and return the length of qname
  * */
-int DNS_Query(int nature, void* sockfd_void, char *msg, char *host, char *ip_dns_server, int query_type, int num_req)
+int DNS_Query(int nature, void* sockfd_void, char *msg, char *host, char *ip_dns_server, int query_type)
 {
-    char buf[65536], msg_encoded[32768]; // Why is there a problem with msg_encoded when using malloc ?????
-    char *qname = NULL, *splited = NULL;
+    struct DNS_PACKET *dnspacket = NULL;
+    dnspacket = (struct DNS_PACKET*) malloc(sizeof(struct DNS_PACKET));
 
     int s = *(int *) sockfd_void;
 
     struct sockaddr_in dest;
-
-    struct DNS_HEADER *dns = NULL;
-    struct QUESTION *qinfo = NULL;
-
-    //printf("Resolving %s...\n", host);
-
     dest.sin_family = AF_INET;
     dest.sin_port = htons(53); //DNS uses the port 53
     dest.sin_addr.s_addr = inet_addr(ip_dns_server);
 
-    //Set the DNS structure to standard queries
-    dns = (struct DNS_HEADER *) &buf;
+    // DNS_HEADER
+    struct DNS_HEADER* header = (struct DNS_HEADER*) malloc(sizeof(struct DNS_HEADER));
+    header = dnspacket->header;
 
-    dns->id = (unsigned short) htons(getpid());
-    dns->qr = 0; //This is a query
-    dns->opcode = 0; //This is a standard query
-    dns->aa = 0; //Not Authoritative
-    dns->tc = 0; //This message is not truncated
-    dns->rd = 1; //Recursion Desired
-    dns->ra = 0; //Recursion not available! hey we dont have it (lol)
-    dns->z = 0;
-    dns->ad = 0;
-    dns->cd = 0;
-    dns->rcode = 0;
-    dns->q_count = htons(1); //we have only 1 question
-    dns->ans_count = 0;
-    dns->auth_count = 0;
-    dns->add_count = 0;
+    header->id = (unsigned short) htons(getpid());
+    header->qr = 0; //This is a query
+    header->opcode = 0; //This is a standard query
+    header->aa = 0; //Not Authoritative
+    header->tc = 0; //This message is not truncated
+    header->rd = 1; //Recursion Desired
+    header->ra = 0; //Recursion not available! hey we dont have it (lol)
+    header->z = 0;
+    header->ad = 0;
+    header->cd = 0;
+    header->rcode = 0;
+    header->q_count = htons(1); //we have only 1 question
+    header->ans_count = 0;
+    header->auth_count = 0;
+    header->add_count = 0;
 
-    //Point to the query portion
-    qname = (char*) &buf[sizeof(struct DNS_HEADER)];
+    // Query portion
+    char *qname = (char *) malloc(MAX_SZ);
+    qname = dnspacket->qname;
 
-    /* convert msg into 'd/r'+${msg}+'.'+${hostname} see DNS_Encode.c */
-    splited = Encode(msg);
+    // convert msg into 'd/r'+${msg}+'.'+${hostname} see DNS_Encode.c
+    char msg_encoded[32768];
+    char *splited = NULL;
+    splited = DNS_Split(msg);
     
     if (nature) //real query containing information 
-    {
-        msg_encoded[0] = 'd';
-    }
+    {msg_encoded[0] = 'd';}
     else //fake query requesting answers
-    {
-        msg_encoded[0] = 'r';
-    }
+    {msg_encoded[0] = 'r';}
     //printf("%s\n", msg_encoded);
 
     strcat(msg_encoded, splited);
     msg_encoded[strlen(splited) + 1] = '.';
+    msg_encoded[strlen(splited) + 2] = '$';
+    msg_encoded[strlen(splited) + 3] = '.';
     strcat(msg_encoded, host);
 
     printf("Msg ready to be sent: '%s'.\n", msg_encoded);
@@ -90,20 +87,28 @@ int DNS_Query(int nature, void* sockfd_void, char *msg, char *host, char *ip_dns
 
     free(splited);
 
-    qinfo = (struct QUESTION*) &buf[sizeof(struct DNS_HEADER) + (strlen((const char*) qname) + 1)]; //fill it
+    struct QUESTION *question = (struct QUESTION*) malloc(sizeof(struct QUESTION)); //fill it
 
-    qinfo->qtype = htons(query_type); //type of the query, A, MX, CNAME, NS etc
-    qinfo->qclass = htons(1); //its internet (lol)
+    question->qtype = htons(query_type); //type of the query, A, MX, CNAME, NS etc
+    question->qclass = htons(1); //its internet (lol)
 
-    int len_qname = strlen((const char*)qname) + 1;
+    int len_qname = strlen(qname) + 1;
     
+    char buf[2*MAX_SZ];
+    strcpy(buf, binary_from_new(dnspacket));
+    
+    free(dnspacket);
+    free(header);
+    free(qname);
+    free(question);
+
     if (nature)
     {
         printf("Sending Packet...\n");    
     }
     else
     {
-        printf("Sending request for data number '%d'...\n", num_req);
+        printf("Sending request for data...\n");
     }
     
     if (sendto(s, (char*)buf, sizeof(struct DNS_HEADER)+ len_qname + sizeof(struct QUESTION), 0, (struct sockaddr*)&dest, sizeof(dest)) < 0)
