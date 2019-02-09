@@ -13,24 +13,31 @@
  */
 struct DNS_PACKET* new_from_binary(char* buf, int qname_len)
 	{
-		struct DNS_PACKET *dnspacket = (struct DNS_PACKET*) malloc(sizeof(struct DNS_PACKET));
-		
-		struct DNS_HEADER *header = (struct DNS_HEADER*) malloc(sizeof(struct DNS_HEADER));
+		struct DNS_PACKET *dnspacket = NULL;
+		dnspacket = (struct DNS_PACKET*) malloc(sizeof(struct DNS_PACKET));
+	    dnspacket->header = (struct DNS_HEADER*) malloc(sizeof(struct DNS_HEADER));
+	    dnspacket->qname = (char *) malloc(qname_len);
+	    dnspacket->question = (struct QUESTION*) malloc(sizeof(struct QUESTION));
+			
+		struct DNS_HEADER *header = NULL;
+		header = dnspacket->header;
 		memcpy(header, buf, sizeof(struct DNS_HEADER));
 		dnspacket->header = header;
     	
     	char* pointer = buf + sizeof(struct DNS_HEADER);
-    	char* qname = (char*) malloc(qname_len);
+    	char* qname = NULL;
+    	qname = dnspacket->qname;
     	qname = &pointer[qname_len];
-    	dnspacket->qname = qname;
 
     	pointer += qname_len;
-    	struct QUESTION* question = (struct QUESTION*) malloc(sizeof(struct QUESTION));
+    	struct QUESTION* question = NULL;
+    	question = dnspacket->question;
     	memcpy(question, pointer, sizeof(struct QUESTION));
-    	dnspacket->question = question;
     	
-		struct RES_RECORD *record = (struct RES_RECORD*) pointer;
-		dnspacket->record = record;
-		
+    	pointer += sizeof(struct Question);
+		struct RES_RECORD *record = NULL;
+		record = dnspacket->record;
+		memcpy(question, pointer, sizeof(struct QUESTION));
+
 		return dnspacket;
 	}
