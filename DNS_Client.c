@@ -35,7 +35,7 @@
 #define MAX_SZ 32768
 
 pthread_mutex_t sendmutex;
-//pthread_mutex_t receivemutex;
+pthread_mutex_t receivemutex;
 
 int main(int argc, char *argv[])
 {
@@ -85,35 +85,31 @@ int main(int argc, char *argv[])
         printf("\n Mutex init failed.\n");
         return (EXIT_FAILURE);
     }
-    /*
     if (pthread_mutex_init(&receivemutex, NULL) != 0)
     {
         printf("\n mutex init failed\n");
         return (EXIT_FAILURE);
-    }
-	*/   
+    }   
 	
 	if (pthread_create(&sending_thread, NULL, &sending, (void*) sih)) {
 		fprintf(stderr, "Error creating sending thread.\n");
 		return (EXIT_FAILURE);
 	}
-	/*
 	if (pthread_create(&receiving_thread, NULL, &receiving, (void*) sih)) {
 		fprintf(stderr, "Error creating receiving thread.\n");
 		return (EXIT_FAILURE);
 	}
-	*/
 	if (pthread_join(sending_thread, NULL)) {
 		fprintf(stderr, "Error joining sending thread.\n");
 		return (EXIT_FAILURE);
 	}
-	/*
+	
 	if (pthread_join(receiving_thread, NULL)) {
 		fprintf(stderr, "Error joining receiving thread.\n");
 		return (EXIT_FAILURE);
 	}
 	pthread_exit(NULL);
-	*/
+	
 	/*
 	//close socket
 	if (close(sockfd) == 0) {
@@ -164,7 +160,7 @@ void *sending(void *sih_void)
 }
 
 /* ask if the DNS server has a packet to send back */
-/*
+
 void *receiving(void *sih_void)
 {
 	pthread_mutex_lock(&receivemutex);
@@ -196,7 +192,6 @@ void *receiving(void *sih_void)
 
 	pthread_mutex_unlock(&receivemutex);
 }
-*/
 
 /* The following code was copied from:
  * http://www.cis.syr.edu/~wedu/seed/Labs_12.04/Networking/Firewall_VPN/files/simpletun.c
