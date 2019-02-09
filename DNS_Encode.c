@@ -5,22 +5,23 @@
 
 #include "DNS_Encode.h"
 /*
-#define MAX_SZ 32768
-
 int main(int argc, char* argv[])
 {
-    char msg[MAX_SZ];
+    char msg[128];
 
 	printf("Enter the msg to encode: ");
-	fgets(msg, MAX_SZ, stdin);
+	fgets(msg, 128, stdin);
 
 	// Remove trailing newline, if there is.
 	if ((strlen(msg) > 0) && (msg[strlen(msg)-1] == '\n'))
 	{msg[strlen(msg)-1] = '\0';}
+	
+	char *dns = malloc(128);
+	printf("Original = '%s'\n", msg);
+	ChangetoDnsNameFormat(dns, msg); 
 
-	char* splited = DNS_Split(msg);
-	printf("Splited = '%s'\n", splited);
-	free(splited);
+	printf("Encoded = '%s'\n", dns);
+	free(dns);
 	return 0;
 }
 */
@@ -84,20 +85,25 @@ Dated : 29/4/2009
  * */
 void ChangetoDnsNameFormat(char* dns, char* host) 
 {
-    int lock = 0 , i;
-    strcat((char*)host,".");
+    int run_dns = 0, run_host = 0;
+    strcat(host,".");
      
-    for(i = 0 ; i < strlen((char*)host) ; i++) 
+    for(int i = 0; i < strlen(host); i++) 
     {
         if(host[i]=='.') 
         {
-            *dns++ = i-lock;
-            for(;lock<i;lock++) 
+            char buf[2];
+            memset(buf, 0, 2);
+            sprintf(buf, "%d", i-run_host);
+            strcat(dns, buf);
+            run_dns += strlen(buf);
+            for(int j=0; j<i-run_host; j++) 
             {
-                *dns++=host[lock];
+                dns[run_dns] = host[run_host+j];
+                run_dns++;
             }
-            lock++; //or lock=i+1;
+            run_host = i+1;
         }
     }
-    *dns++='\0';
+    dns[run_dns] = '\0';
 }
