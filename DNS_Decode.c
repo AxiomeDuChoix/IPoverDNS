@@ -4,9 +4,10 @@
 #include <stdlib.h> //malloc
 
 #include "DNS_Decode.h"
-#include "CyoDecode.h" //encode into Base32
 
-#define MAX_SZ 2048
+#define MAX_SZ 32768
+
+/*
 int main(int argc, char* argv[])
 {
     char msg[MAX_SZ];
@@ -14,67 +15,37 @@ int main(int argc, char* argv[])
 	printf("Enter the msg to decode: ");
 	fgets(msg, MAX_SZ, stdin);
 
-    /* Remove trailing newline, if there is. */
+    // Remove trailing newline, if there is.
     if ((strlen(msg) > 0) && (msg[strlen(msg)-1] == '\n'))
     {msg[strlen(msg)-1] = '\0';}
 
-	char* decoded = Decode(msg);
+	char* decoded = DNS_Unsplit(msg);
 	free(decoded);
 	return 0;
 }
+*/
 
-char* Decode(char* msg)
+char* DNS_Unsplit(char* msg)
 {
 	
 	printf("Original = '%s'\n", msg);
 
 	/* Delete all the dots */
 
-	char* unsplited = dns_unsplit(msg);
+	char* unsplited = (char*) malloc(strlen(msg));
+    int comp_uns = 0;
 
-	/* Change all "0" to "=" */
-
-	for (char* p = unsplited; p != NULL; p = strchr(p, '0')) {
-	    *p = '=';
-	}
+    for (int j=0; j<strlen(msg); j++)
+    {
+        if (msg[j] != '.') {
+            unsplited[comp_uns] = msg[j];
+            comp_uns ++;
+        }
+    }
 
     printf("Unsplited = '%s'\n", unsplited);
-	
-	/* Decode using Base32 */
 
-    size_t required = cyoBase32DecodeGetLength(strlen(unsplited));
-    
-    char* decoded = (char*) malloc(required);
-    if (decoded == NULL)
-    {
-        printf("*** ERROR: Unable to allocate buffer for decoding ***\n");
-        return NULL;
-    }
-    cyoBase32Decode(decoded, unsplited, strlen(unsplited));
-
-    printf("Decoded = '%s'\n", decoded);
-    free(unsplited);
-
-    return decoded;
-}
-
-/* 
- *
- */
-
-char* dns_unsplit(char* encoded){ 
-
-	char* unsplited = (char*) malloc(strlen(encoded));
-	int comp_uns = 0;
-
-	for (int j=0; j<strlen(encoded); j++)
-	{
-		if (encoded[j] != '.') {
-			unsplited[comp_uns] = encoded[j];
-			comp_uns ++;
-		}
-	}
-	return unsplited;
+    return unsplited;
 }
 
 /*
@@ -89,15 +60,14 @@ Dated : 29/4/2009
 /*
  * This will convert 3www6google3com to www.google.com 
  * */
-char* ReadName(char* reader, char* buffer, int* count)
+char* ReadName(char* reader, char* buffer)
 {
     char *name = NULL;
 
     unsigned int p = 0, jumped = 0, offset;
     int i, j;
  
-    *count = 1;
-    name = (char*) malloc(256);
+    name = (char*) malloc(MAX_SZ);
  
     name[0] = '\0';
  
@@ -116,18 +86,9 @@ char* ReadName(char* reader, char* buffer, int* count)
         }
  
         reader = reader+1;
- 
-        if(jumped == 0)
-        {
-            *count = *count + 1; //if we havent jumped to another location then we can count up
-        }
     }
  
     name[p]='\0'; //string complete
-    if(jumped == 1)
-    {
-        *count = *count + 1; //number of steps we actually moved forward in the packet
-    }
  
     //now convert 3www6google3com0 to www.google.com
     for(i=0; i<(int)strlen((const char*)name); i++) 

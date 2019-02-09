@@ -22,7 +22,7 @@ ip link set tap0 up
 ip addr add $iptap/24 dev tap0
 
 #Limits the MSS to the interface's MTU
-iptables -I OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+#iptables -I OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
 #get the default gateway (IP address of the router)
 DEFR=$(netstat -rn | grep "^0.0.0.0 " | awk '{print $2}')

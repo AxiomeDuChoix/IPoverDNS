@@ -4,10 +4,9 @@
 #include <stdlib.h> //malloc
 
 #include "DNS_Encode.h"
-#include "CyoEncode.h" //encode into Base32
-
-#define MAX_SZ 32768
 /*
+#define MAX_SZ 32768
+
 int main(int argc, char* argv[])
 {
     char msg[MAX_SZ];
@@ -19,72 +18,57 @@ int main(int argc, char* argv[])
 	if ((strlen(msg) > 0) && (msg[strlen(msg)-1] == '\n'))
 	{msg[strlen(msg)-1] = '\0';}
 
-	char* result = Encode(msg);
-	free(result);
+	char* splited = DNS_Split(msg);
+	printf("Splited = '%s'\n", splited);
+	free(splited);
 	return 0;
 }
 */
 
-char* Encode (char* msg)
-{
-	size_t required = 0;
-	char *encoded = NULL, *splited = NULL;
-
-	/* Encode using Base32 */
-
-	printf("Original = '%s'\n", msg);
-	required = cyoBase32EncodeGetLength(strlen(msg));
-	
-	encoded = (char*) malloc(required);
-	cyoBase32Encode(encoded, msg, strlen(msg)); 
-
-	/* Change all "=" to "0" */
-
-	for (char* p = encoded; p != NULL; p = strchr(p, '=')) {
-	    *p = '0';
-	}
-
-	splited = dns_split(encoded, required);
-
-    free(encoded);
-    printf("Splited = '%s'\n", splited);
-    return splited;
-}
-
-/* Split the encoded Base32 message into sections of 63 bits (because in QNAME each word between the dots only has 64 bits)
+/* Split the message into sections of 63 bits (because in QNAME each word between the dots only has 64 bits)
  * The first word can only have 62 bits ("d" in front and "." behind)
  * The others can have 63 ("." behind)
  */
 
-char* dns_split(char* encoded, size_t required){ 
-	char* msg_encoded = NULL;
-	msg_encoded = (char*) malloc(required + required/63 + 1);
-	int comp_enc = 0;
+char* DNS_Split(char* msg)
+{
+	char *splited = NULL;
+
+	/* Encode using Base32 */
+
+	printf("Original = '%s'\n", msg); 
+
+	int required = strlen(msg) + strlen(msg)/63 + 1;
+	splited = (char*) malloc(required);
+	int comp_spl = 0;
 	int comp_msg = 0;
 	int size_pack = 62;
-	int len_encoded = strlen(encoded);
 
 	while (1)
 	{
 		for (int j = 0; j < size_pack; j++)
 		{
-			if (comp_enc < len_encoded)
+			if (comp_msg < strlen(msg))
 			{
-				msg_encoded[comp_msg] = encoded[comp_enc];
-				comp_enc++;
+				splited[comp_spl] = msg[comp_msg];
+				comp_spl++;
 				comp_msg++;
 			}
-			else {return msg_encoded;}
+			else {return splited;}
 		}
-		if (comp_enc + 1 < len_encoded)
+		if (comp_msg + 1 < strlen(msg))
 		{
-			msg_encoded[comp_msg] = '.';
-			comp_msg++;
+			splited[comp_spl] = '.';
+			comp_spl++;
 		}
-		else {return msg_encoded;}
+		else {return splited;}
 		size_pack = 63;
 	}
+
+    printf("Splited = '%s'\n", splited);
+    return splited;
 }
+
 
 /*
 The following is modified from :
