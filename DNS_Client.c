@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
 	//create threads in order to send messages while receiving data
 	pthread_t sending_thread;
-	//pthread_t receiving_thread;
+	pthread_t receiving_thread;
 	
 	if (pthread_mutex_init(&sendmutex, NULL) != 0)
     {
@@ -103,7 +103,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Error joining sending thread.\n");
 		return (EXIT_FAILURE);
 	}
-	
 	if (pthread_join(receiving_thread, NULL)) {
 		fprintf(stderr, "Error joining receiving thread.\n");
 		return (EXIT_FAILURE);
