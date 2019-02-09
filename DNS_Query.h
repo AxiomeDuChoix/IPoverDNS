@@ -83,12 +83,12 @@ struct RES_RECORD
 };
  
 //Structure of a Query
-typedef struct
+struct DNS_PACKET
 {
-    char *name;
-    struct DNS_header *header;
+    struct DNS_HEADER *header;
+    char *qname;
     struct QUESTION *ques;
     struct RES_RECORD *record;
-} QUERY;
+};
 
 #endif
