@@ -31,6 +31,9 @@ int DNS_Query(int nature, void* sockfd_void, char *msg, char *host, char *ip_dns
 {
     struct DNS_PACKET *dnspacket = NULL;
     dnspacket = (struct DNS_PACKET*) malloc(sizeof(struct DNS_PACKET));
+    dnspacket->header = (struct DNS_HEADER*) malloc(sizeof(struct DNS_HEADER));
+    dnspacket->qname = (char *) malloc(MAX_SZ);
+    dnspacket->question = (struct QUESTION*) malloc(sizeof(struct QUESTION));
 
     int s = *(int *) sockfd_void;
 
@@ -40,9 +43,9 @@ int DNS_Query(int nature, void* sockfd_void, char *msg, char *host, char *ip_dns
     dest.sin_addr.s_addr = inet_addr(ip_dns_server);
 
     // DNS_HEADER
-    struct DNS_HEADER* header = (struct DNS_HEADER*) malloc(sizeof(struct DNS_HEADER));
+    struct DNS_HEADER* header = NULL;
     header = dnspacket->header;
-
+    
     header->id = (unsigned short) htons(getpid());
     header->qr = 0; //This is a query
     header->opcode = 0; //This is a standard query
@@ -60,11 +63,12 @@ int DNS_Query(int nature, void* sockfd_void, char *msg, char *host, char *ip_dns
     header->add_count = 0;
 
     // Query portion
-    char *qname = (char *) malloc(MAX_SZ);
+    char *qname = NULL;
     qname = dnspacket->qname;
 
     // convert msg into 'd/r'+${msg}+'.'+${hostname} see DNS_Encode.c
-    char msg_encoded[32768];
+    char msg_encoded[MAX_SZ];
+    memset(msg_encoded, 0, MAX_SZ);
     char *splited = NULL;
     splited = DNS_Split(msg);
     
@@ -84,14 +88,14 @@ int DNS_Query(int nature, void* sockfd_void, char *msg, char *host, char *ip_dns
 
     /* see DNS_Encode.c */
     ChangetoDnsNameFormat(qname, msg_encoded); //e.g. text: www.google.com & qname: 3www6google3com
-
+    printf("DNSFormat: %s\n", qname);
     free(splited);
 
-    struct QUESTION *question = (struct QUESTION*) malloc(sizeof(struct QUESTION)); //fill it
+    struct QUESTION *question = NULL; //fill it
+    question = dnspacket->question;
 
     question->qtype = htons(query_type); //type of the query, A, MX, CNAME, NS etc
     question->qclass = htons(1); //its internet (lol)
-
     int len_qname = strlen(qname) + 1;
     
     char buf[2*MAX_SZ];

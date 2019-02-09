@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
 
 	char *host = argv[1];
 	char *ip_dns_server = argv[2];
-
 	int tap_fd;
   	char if_name[MAX_SZ] = "";
 
@@ -79,18 +78,18 @@ int main(int argc, char *argv[])
 
 	//create threads in order to send messages while receiving data
 	pthread_t sending_thread;
-	pthread_t receiving_thread;
-
+	//pthread_t receiving_thread;
+	
 	if (pthread_mutex_init(&sendmutex, NULL) != 0)
     {
-        printf("\n mutex init failed\n");
+        printf("\n Mutex init failed.\n");
         return (EXIT_FAILURE);
     }
     if (pthread_mutex_init(&receivemutex, NULL) != 0)
     {
         printf("\n mutex init failed\n");
         return (EXIT_FAILURE);
-    }
+    }   
 	
 	if (pthread_create(&sending_thread, NULL, &sending, (void*) sih)) {
 		fprintf(stderr, "Error creating sending thread.\n");
@@ -100,18 +99,17 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Error creating receiving thread.\n");
 		return (EXIT_FAILURE);
 	}
-
 	if (pthread_join(sending_thread, NULL)) {
 		fprintf(stderr, "Error joining sending thread.\n");
 		return (EXIT_FAILURE);
 	}
+	
 	if (pthread_join(receiving_thread, NULL)) {
 		fprintf(stderr, "Error joining receiving thread.\n");
 		return (EXIT_FAILURE);
 	}
-	
 	pthread_exit(NULL);
-
+	
 	/*
 	//close socket
 	if (close(sockfd) == 0) {
@@ -147,9 +145,10 @@ void *sending(void *sih_void)
 	/* listen from tap0 */
 	while (1)
 	{
+		printf("Listening from tap0...\n");
 		char msg[MAX_SZ];
 		memset(msg, 0, MAX_SZ);
-      	nread = read_n(tap_fd, msg, MAX_SZ);
+      	nread = cread(tap_fd, msg, MAX_SZ);
       	printf("Message to encode: '%s' (%d bytes)\n", msg, nread);
       	void* sockfd_void = NULL;
 		sockfd_void = &sockfd;
@@ -161,6 +160,7 @@ void *sending(void *sih_void)
 }
 
 /* ask if the DNS server has a packet to send back */
+
 void *receiving(void *sih_void)
 {
 	pthread_mutex_lock(&receivemutex);
@@ -179,10 +179,10 @@ void *receiving(void *sih_void)
 
 	while (1)
 	{
-		/* see DNS_Query.c */
+		// see DNS_Query.c 
 		int len = DNS_Query(0, sockfd_void, "0", host, ip_dns_server, T_A);
 	
-		/* see DNS_Listen.c */
+		// see DNS_Listen.c 
 		char *received = Listen(sockfd_void, len, ip_dns_server);
 		cwrite(tapfd, received, strlen(received));
 		free(received);
@@ -192,7 +192,6 @@ void *receiving(void *sih_void)
 
 	pthread_mutex_unlock(&receivemutex);
 }
-
 
 /* The following code was copied from:
  * http://www.cis.syr.edu/~wedu/seed/Labs_12.04/Networking/Firewall_VPN/files/simpletun.c
