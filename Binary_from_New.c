@@ -12,6 +12,23 @@
 char* binary_from_new(void* dnspacket_void)
 	{
 		struct DNS_PACKET *dnspacket = (struct DNS_PACKET*) dnspacket_void;
+		
+		char buf[MAX_SZ*2];
+		char *pointer = NULL;
+		pointer = buf;
+		
+		memcpy(pointer, dnspacket->header, sizeof(struct DNS_HEADER));
+	
+		pointer += sizeof(struct DNS_HEADER);
+		memcpy(pointer, dnspacket->question, sizeof(struct QUESTION));
+	
+		pointer += sizeof(struct QUESTION);
+		memcpy(record, dnspacket->record, sizeof(struct RES_RECORD));
+	
+		pointer += sizeof(struct RES_RECORD);
+		pointer = '\0';
+	
+		/*
 		char *buf = (char*) malloc(MAX_SZ*2);
 		
 		struct DNS_HEADER *header = (struct DNS_HEADER*) &buf;
@@ -25,6 +42,6 @@ char* binary_from_new(void* dnspacket_void)
 		
 		struct RES_RECORD *record = (struct RES_RECORD*) &buf[sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION)];
 		record = dnspacket->record;
-		
+		*/
 		return buf;
 	}
