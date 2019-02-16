@@ -29,7 +29,6 @@ DEFR=$(netstat -rn | grep "^0.0.0.0 " | awk '{print $2}')
 
 #delete it
 route del default gw $DEFR
-route del 129.104.32.251 gw $DEFR
 
 #only if we want to reach the DNS server we pass by the original gateway 
 route add -host $1 gw $DEFR

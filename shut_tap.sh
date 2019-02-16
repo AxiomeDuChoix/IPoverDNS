@@ -24,7 +24,5 @@ route del $1
 
 route add default gw $DEFR
 
-route add 129.104.32.251 gw $DEFR
-
 #show the IP routing table
 netstat -rn
